@@ -12,6 +12,9 @@
     "@napi-rs/cli": "^2.18.4",
     "ava": "^6.0.1"
   },
+  "bin": {
+    "nodemon-rs": "./bin/nodemon-rs.js"
+  },
   "engines": {
     "node": ">= 10"
   },
@@ -23,5 +26,10 @@
     "test": "ava",
     "universal": "napi universal",
     "version": "napi version"
-  }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "bin"
+  ]
 }
