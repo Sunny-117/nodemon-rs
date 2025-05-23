@@ -5,12 +5,12 @@ extern crate napi_derive;
 
 use napi::bindgen_prelude::*;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::process::{Child, Command, Stdio};
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time::Duration;
-use std::io::{BufRead, BufReader};
 
 struct NotifyError(notify::Error);
 
@@ -63,7 +63,7 @@ impl NodemonInstance {
       .arg(script)
       .stdout(Stdio::piped())
       .stderr(Stdio::piped())
-      .spawn() 
+      .spawn()
     {
       Ok(mut child) => {
         if let Some(stdout) = child.stdout.take() {
@@ -114,7 +114,8 @@ impl NodemonInstance {
         if let Some(ext) = &self.options.ext {
           event.paths.iter().any(|path| {
             if let Some(file_ext) = path.extension() {
-              ext.split(',')
+              ext
+                .split(',')
                 .any(|e| e.trim() == file_ext.to_str().unwrap_or(""))
             } else {
               false
@@ -132,7 +133,7 @@ impl NodemonInstance {
 #[napi]
 pub fn watch(options: WatchOptions) -> Result<()> {
   let (tx, rx) = channel();
-  
+
   let mut watcher: RecommendedWatcher = Watcher::new(
     tx,
     Config::default().with_poll_interval(Duration::from_millis(100)),
@@ -147,13 +148,13 @@ pub fn watch(options: WatchOptions) -> Result<()> {
   let mut nodemon = NodemonInstance::new(options);
   nodemon.restart();
 
-  let delay = Duration::from_millis((nodemon.options.delay.unwrap_or(1.0) * 1000.0) as u64);
+  // let delay = Duration::from_millis((nodemon.options.delay.unwrap_or(0.2) * 1000.0) as u64);
 
   loop {
     match rx.recv() {
       Ok(Ok(event)) => {
         if nodemon.should_restart(&event) {
-          thread::sleep(delay);
+          // thread::sleep(delay);
           println!("\n[nodemon-rs] restarting due to changes...");
           nodemon.restart();
         }

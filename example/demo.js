@@ -47,7 +47,7 @@ function killProcessOnPort(port) {
 async function startServer() {
     try {
         await killProcessOnPort(PORT);
-        
+
         const server = http.createServer((req, res) => {
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('Hello World! Auto-restart test - ' + new Date().toISOString() + '\n');
