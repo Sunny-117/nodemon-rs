@@ -54,28 +54,37 @@ while (i < args.length) {
     i++;
 }
 
-// If no script is specified in args or config, use the first .js file in package.json
+// If no script is specified, try to find one in this order:
+// 1. script from nodemon.json
+// 2. main from package.json
+// 3. index.js in current directory
+// 4. fail if none found
 if (!options.script) {
     try {
-        const packageJson = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8'));
-        if (packageJson.main) {
-            options.script = packageJson.main;
+        // Try package.json main field
+        const packageJsonPath = path.resolve(process.cwd(), 'package.json');
+        if (fs.existsSync(packageJsonPath)) {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            if (packageJson.main) {
+                options.script = packageJson.main;
+            }
+        }
+
+        // If still no script, try index.js
+        if (!options.script) {
+            const indexPath = path.resolve(process.cwd(), 'index.js');
+            if (fs.existsSync(indexPath)) {
+                options.script = 'index.js';
+            } else {
+                console.error('Error: Could not find index.js or main field in package.json');
+                console.log('Please specify a script to run or create an index.js file');
+                process.exit(1);
+            }
         }
     } catch (err) {
-        console.error('Error: No script specified and could not read package.json');
+        console.error('Error:', err.message);
         process.exit(1);
     }
-}
-
-if (!options.script) {
-    console.error('Error: No script specified to run');
-    console.log('Usage: nodemon-rs [script] [options]');
-    console.log('Options:');
-    console.log('  --ext      File extensions to watch (default: js,mjs,json)');
-    console.log('  --ignore   Patterns to ignore (default: node_modules/**/*,.git)');
-    console.log('  --exec     Executor to run script (default: node)');
-    console.log('  --delay    Delay in seconds before restarting (default: 1.0)');
-    process.exit(1);
 }
 
 // Convert relative path to absolute
